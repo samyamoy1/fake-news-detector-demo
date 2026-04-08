@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fake News Detector</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 40px;
+            width: 100%;
+            max-width: 600px;
+        }
+        h1 { text-align: center; color: #1a1a2e; margin-bottom: 10px; }
+        .subtitle { text-align: center; color: #666; margin-bottom: 30px; }
+        .input-group { margin-bottom: 20px; }
+        label { display: block; color: #333; margin-bottom: 8px; font-weight: 600; }
+        input[type="text"], textarea {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        input[type="text"]:focus, textarea:focus {
+            outline: none;
+            border-color: #4a90d9;
+        }
+        textarea { min-height: 120px; resize: vertical; }
+        button {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #4a90d9 0%, #2c5aa0 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(74, 144, 217, 0.3);
+        }
+        .result {
+            margin-top: 30px;
+            padding: 25px;
+            border-radius: 15px;
+            display: none;
+        }
+        .result.show { display: block; animation: fadeIn 0.5s; }
+        .result.fake { background: linear-gradient(135deg, #ff6b6b 0%, #ee5a5a 100%); color: white; }
+        .result.real { background: linear-gradient(135deg, #51cf66 0%, #40c057 100%); color: white; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .result-label { font-size: 32px; font-weight: bold; text-align: center; margin-bottom: 10px; }
+        .confidence { text-align: center; font-size: 18px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📰 Fake News Detector</h1>
+        <p class="subtitle">Enter news headline and article text to check authenticity</p>
+        
+        <div class="input-group">
+            <label for="headline">Headline</label>
+            <input type="text" id="headline" placeholder="Enter news headline...">
+        </div>
+        
+        <div class="input-group">
+            <label for="text">Article Text (optional)</label>
+            <textarea id="text" placeholder="Enter article text or description..."></textarea>
+        </div>
+        
+        <button onclick="analyze()">Analyze News</button>
+        
+        <div class="result" id="result">
+            <div class="result-label" id="resultLabel"></div>
+            <div class="confidence" id="confidence"></div>
+        </div>
+    </div>
+
+    <script>
+        // Keywords that indicate fake news
+        const fakeKeywords = [
+            'breaking', 'shocking', 'exposed', 'secret', 'conspiracy', 'hide', 'leaked',
+            'miracle', 'cure', 'cancer', 'instant', 'never', 'believe', 'warn', 'alert',
+            'banned', 'censored', 'they don\'t want', 'wake up', 'share before', 'they hide',
+            'elite', 'controlled', 'government', ' pharma', 'big', 'underground', 'aliens',
+            'time travel', 'portal', 'dimension', 'brain', 'percent', 'overnight', 'survive',
+            'without sleep', 'DNA', 'microchip', 'world war', 'asteroid', 'dark', 'free money'
+        ];
+
+        // Keywords that indicate real news
+        const realKeywords = [
+            'announces', 'launches', 'policy', 'research', 'study', 'report', 'official',
+            'government', 'company', 'industry', 'sector', 'economy', 'stock', 'market',
+            'technology', 'development', 'researchers', 'scientists', 'published', 'journal',
+            'analysis', 'data', 'according', 'confirmed', 'statement', 'conference',
+            'quarterly', 'earnings', 'increase', 'growth', 'supports', 'funding'
+        ];
+
+        function analyze() {
+            const headline = document.getElementById('headline').value.toLowerCase();
+            const text = document.getElementById('text').value.toLowerCase();
+            
+            if (!headline && !text) {
+                alert('Please enter a headline or text to analyze');
+                return;
+            }
+
+            const combined = headline + ' ' + text;
+            
+            // Count matches
+            let fakeScore = 0;
+            let realScore = 0;
+
+            fakeKeywords.forEach(keyword => {
+                if (combined.includes(keyword)) fakeScore++;
+            });
+
+            realKeywords.forEach(keyword => {
+                if (combined.includes(keyword)) realScore++;
+            });
+
+            // Calculate confidence
+            const total = fakeScore + realScore;
+            let result, confidence, resultClass;
+
+            if (fakeScore > realScore) {
+                result = '⚠️ FAKE NEWS';
+                confidence = Math.min(95, 50 + (fakeScore - realScore) * 10);
+                resultClass = 'fake';
+            } else if (realScore > fakeScore) {
+                result = '✅ REAL NEWS';
+                confidence = Math.min(95, 50 + (realScore - fakeScore) * 10);
+                resultClass = 'real';
+            } else {
+                result = '❓ UNCERTAIN';
+                confidence = 50;
+                resultClass = realScore > 0 ? 'real' : 'fake';
+            }
+
+            document.getElementById('resultLabel').textContent = result;
+            document.getElementById('confidence').textContent = `Confidence: ${confidence}%`;
+            
+            const resultDiv = document.getElementById('result');
+            resultDiv.className = 'result show ' + resultClass;
+        }
+    </script>
+</body>
+</html>
