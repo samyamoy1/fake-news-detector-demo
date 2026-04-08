@@ -4,7 +4,7 @@ A simple web-based fake news detector using keyword analysis (no backend require
 
 ## Live Demo
 
-Visit: https://samyamoy1.github.io/fake-news-detector/
+Visit: https://samyamoy1.github.io/fake-news-detector-demo/
 
 ## How It Works
 
